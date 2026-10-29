@@ -7,7 +7,8 @@
 - `release-please.default.json`: release-please 기본 체인지로그. Conventional Commit을 종류별로 묶고 관련 PR·커밋 링크를 넣는다.
 - `release-please.github.json`: 내장 `changelog-type: github`. GitHub의 릴리즈 노트 생성 API가 PR 제목·작성자·링크와 `Full Changelog` 비교 링크를 만든다.
 - `.github/workflows/release-please.yml`: `main`에 push되면 `custom` 모드로 실행한다. Actions의 `Run workflow`에서 `default`, `github`, `custom`을 골라 비교할 수 있다.
-- `scripts/update-release-notes.cjs`: `custom` 모드에서 생성된 GitHub Release 본문을 리로그 형식으로 후처리한다.
+- `.github/release.yml`: `release/core` 라벨이 붙은 PR은 `핵심 변경`, 나머지 PR은 `기타 변경`으로 분류한다.
+- `scripts/update-release-notes.cjs`: `custom` 모드에서 버전 헤딩을 제거하고 KST 릴리즈 시각을 추가한다.
 - `.release-please-manifest.json`: 첫 실행용 빈 버전 매니페스트. 첫 릴리즈 뒤에는 release-please가 버전을 기록한다.
 
 세 모드는 **같은 릴리즈 PR을 갱신**한다. `custom`은 release-please에 `github` 설정을 전달한 뒤, 실제 Release가 생성됐을 때만 본문을 다시 작성한다. release-please가 다음 릴리즈를 찾을 때 사용하는 Release PR 본문과 `CHANGELOG.md`는 수정하지 않는다. 이미 생성된 릴리즈의 본문을 모드 변경만으로 소급 수정하지 않는다.
@@ -28,21 +29,15 @@ shout-outz의 [v1.9.0 릴리즈](https://github.com/woowacourse-teams/2026-shout
 
 `changelog-type: github`만으로 [실제 v1.0.0 Release](https://github.com/gustn99/semantic-versioning-test/releases/tag/v1.0.0)에 PR 제목·작성자·링크와 `Full Changelog`가 생성됐다. 리로그의 `[Header] #issue-number title`도 수정 없이 표시됐다.
 
-요청한 최종 형식에는 작은 후처리가 필요하다. `custom` 모드는 생성된 Release에서 버전 헤딩을 제거하고, 맨 위에 `릴리즈 시각: YYYY-MM-DD HH:mm:ss KST`를 일반 텍스트로 쓴다. PR 제목은 다음 헤더로 분류한다.
+요청한 최종 형식에는 GitHub 라벨 분류와 작은 후처리가 필요하다. `release/core` 라벨이 붙은 PR은 `핵심 변경`에 들어가고 나머지는 `기타 변경`에 들어간다. `feat`, `fix`, `refactor` 같은 접두어는 변경 종류이고 핵심 여부는 제품 판단이므로 제목 정규식으로 분류하지 않는다.
 
-| PR 제목 시작 | Release 헤더 |
-| --- | --- |
-| `[Feature]`, `feat:`, `feature:` | `새로운 기능` |
-| `[Fix]`, `[Hotfix]`, `[Bugfix]`, `fix:`, `hotfix:` | `버그 수정` |
-| `[Refactor]`, `refactor:` | `리팩터링` |
-| `[Docs]`, `[Documentation]`, `docs:` | `문서` |
-| 나머지 | `기타 변경` |
+`custom` 모드는 생성된 Release에서 버전 헤딩을 제거하고 맨 위에 `릴리즈 시각: YYYY-MM-DD HH:mm:ss KST`를 일반 텍스트로 쓴다.
 
 각 항목의 작성자와 PR 링크, `New Contributors`, 마지막 `Full Changelog`는 유지한다. `New Contributors` 제거는 필요한 결과에 비해 복잡도만 늘리므로 적용하지 않았다. 자세한 입력·출력 예시는 [커스텀 릴리즈 노트](docs/custom-release-notes.md)에 적었다.
 
 버전 계산은 PR 제목의 `[Feature]`나 `[Hotfix]`를 읽지 않고 파싱된 커밋 타입을 사용한다. 여러 커밋 PR에서는 merge commit 본문의 커밋을, 단일 커밋 PR에서는 squash 커밋을 읽는다. 현재 기본 버전 계산 구현은 `feat:`와 `feature:`를 minor 변경으로 처리하고 그 밖의 releasable fix를 patch 변경으로 처리한다. 다만 공식 사용법이 일관되게 권장하는 타입은 `feat:`와 `fix:`이므로 리로그에 적용할 때도 이 둘을 기준으로 두는 편이 모호하지 않다.
 
-현재 구성은 release-please가 버전·태그·Release PR을 담당하고, 작은 Node.js 스크립트가 최종 GitHub Release 본문만 담당한다. 팀이 내부 커밋을 release-please가 파싱할 수 있는 형식으로 맞추기 어렵다면 `[Feature]`·`[Hotfix]`를 SemVer로 변환하는 전처리나 별도 버전 결정 단계가 추가로 필요하다.
+현재 구성은 release-please가 버전·태그·Release PR을 담당하고, GitHub가 PR 라벨로 섹션을 만들며, 작은 Node.js 스크립트가 최종 GitHub Release 본문의 날짜·시각만 조정한다. 팀이 내부 커밋을 release-please가 파싱할 수 있는 형식으로 맞추기 어렵다면 `[Feature]`·`[Hotfix]`를 SemVer로 변환하는 전처리나 별도 버전 결정 단계가 추가로 필요하다.
 
 ## `release-type: simple`의 의미
 
