@@ -5,6 +5,7 @@
 ## 바꾸는 내용
 
 - `## 버전 (날짜)` 헤딩을 제거한다.
+- `## What's Changed`를 제거하고 두 라벨 분류를 `##` 헤딩으로 올린다.
 - 첫 줄에 `릴리즈 시각: YYYY-MM-DD HH:mm:ss KST`를 일반 본문으로 쓴다.
 - `release/core` 라벨이 붙은 PR은 `핵심 변경`, 나머지는 `기타 변경`으로 분류한다.
 - 각 PR의 작성자·링크, `New Contributors`, `Full Changelog`는 유지한다.
@@ -14,10 +15,11 @@
 ```md
 ## 1.1.0 (2026-10-29)
 
-## 핵심 변경
+## What's Changed
+### 핵심 변경
 * [Feature] #10 기능 추가 by @crew-a in https://example.com/10
 
-## 기타 변경
+### 기타 변경
 * [Hotfix] #11 장애 수정 by @crew-b in https://example.com/11
 
 ## New Contributors

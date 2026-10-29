@@ -31,7 +31,7 @@ shout-outz의 [v1.9.0 릴리즈](https://github.com/woowacourse-teams/2026-shout
 
 요청한 최종 형식에는 GitHub 라벨 분류와 작은 후처리가 필요하다. `release/core` 라벨이 붙은 PR은 `핵심 변경`에 들어가고 나머지는 `기타 변경`에 들어간다. `feat`, `fix`, `refactor` 같은 접두어는 변경 종류이고 핵심 여부는 제품 판단이므로 제목 정규식으로 분류하지 않는다.
 
-`custom` 모드는 생성된 Release에서 버전 헤딩을 제거하고 맨 위에 `릴리즈 시각: YYYY-MM-DD HH:mm:ss KST`를 일반 텍스트로 쓴다.
+`custom` 모드는 생성된 Release에서 버전 헤딩과 바깥 `What's Changed` 헤딩을 제거한다. `핵심 변경`과 `기타 변경`을 2단계 헤딩으로 올리고 맨 위에 `릴리즈 시각: YYYY-MM-DD HH:mm:ss KST`를 일반 텍스트로 쓴다.
 
 각 항목의 작성자와 PR 링크, `New Contributors`, 마지막 `Full Changelog`는 유지한다. `New Contributors` 제거는 필요한 결과에 비해 복잡도만 늘리므로 적용하지 않았다. 자세한 입력·출력 예시는 [커스텀 릴리즈 노트](docs/custom-release-notes.md)에 적었다.
 
