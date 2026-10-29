@@ -24,7 +24,7 @@ function formatKoreanTime(value) {
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} KST`;
 }
 
-function stripVersionHeading(body) {
+function normalizeGeneratedNotes(body) {
   const lines = body.split(/\r?\n/);
   const headingIndex = lines.findIndex((line) => /^##\s+\d+\.\d+\.\d+(?:[-+][^\s]+)?(?:\s+\([^)]+\))?\s*$/.test(line));
 
@@ -32,11 +32,15 @@ function stripVersionHeading(body) {
     lines.splice(headingIndex, 1);
   }
 
-  return lines.join('\n').trim();
+  return lines
+    .filter((line) => !/^## What's Changed\s*$/.test(line))
+    .map((line) => line.replace(/^### (핵심 변경|기타 변경)\s*$/, '## $1'))
+    .join('\n')
+    .trim();
 }
 
 function formatReleaseNotes(body, publishedAt) {
-  const generatedNotes = stripVersionHeading(body);
+  const generatedNotes = normalizeGeneratedNotes(body);
   return `릴리즈 시각: ${formatKoreanTime(publishedAt)}\n\n${generatedNotes}\n`;
 }
 
@@ -91,5 +95,5 @@ if (require.main === module) {
 module.exports = {
   formatKoreanTime,
   formatReleaseNotes,
-  stripVersionHeading,
+  normalizeGeneratedNotes,
 };
