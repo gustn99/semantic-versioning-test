@@ -1,0 +1,2 @@
+리로그의 여러 커밋 PR과 merge commit을 재현한다.
+이 파일은 release-please가 merge commit 본문의 fix 커밋을 읽는지 확인하는 실험 입력이다.
