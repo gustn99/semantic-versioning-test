@@ -25,6 +25,16 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out release helpers
+        uses: actions/checkout@v4
+
+      - name: Normalize Rilog feature title for release-please
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: node scripts/sync-release-please-commit-override.cjs
+
       - name: Select notes format
         id: mode
         env:
@@ -45,10 +55,6 @@ jobs:
         with:
           config-file: ${{ steps.mode.outputs.config }}
           manifest-file: .release-please-manifest.json
-
-      - name: Check out release notes formatter
-        if: steps.release.outputs.release_created == 'true' && steps.mode.outputs.style == 'custom'
-        uses: actions/checkout@v4
 
       - name: Customize GitHub Release notes
         if: steps.release.outputs.release_created == 'true' && steps.mode.outputs.style == 'custom'

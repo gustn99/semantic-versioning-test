@@ -8,6 +8,7 @@
 - `release-please.github.json`: 내장 `changelog-type: github`. GitHub의 릴리즈 노트 생성 API가 PR 제목·작성자·링크와 `Full Changelog` 비교 링크를 만든다.
 - `.github/workflows/release-please.yml`: `main`에 push되면 `custom` 모드로 실행한다. Actions의 `Run workflow`에서 `default`, `github`, `custom`을 골라 비교할 수 있다.
 - `.github/release.yml`: `release/core` 라벨이 붙은 PR은 `핵심 변경`, 나머지 PR은 `기타 변경`으로 분류한다.
+- `scripts/sync-release-please-commit-override.cjs`: 리로그의 `Feature` PR 제목을 release-please가 읽는 Conventional Commit 타입으로 변환한다.
 - `scripts/update-release-notes.cjs`: `custom` 모드에서 버전 헤딩을 제거하고 KST 릴리즈 시각을 추가한다.
 - `.release-please-manifest.json`: 첫 실행용 빈 버전 매니페스트. 첫 릴리즈 뒤에는 release-please가 버전을 기록한다.
 
@@ -35,7 +36,9 @@ shout-outz의 [v1.9.0 릴리즈](https://github.com/woowacourse-teams/2026-shout
 
 각 항목의 작성자와 PR 링크, `New Contributors`, 마지막 `Full Changelog`는 유지한다. `New Contributors` 제거는 필요한 결과에 비해 복잡도만 늘리므로 적용하지 않았다. 자세한 입력·출력 예시는 [커스텀 릴리즈 노트](docs/custom-release-notes.md)에 적었다.
 
-버전 계산은 PR 제목의 `[Feature]`나 `[Hotfix]`를 읽지 않고 파싱된 커밋 타입을 사용한다. 여러 커밋 PR에서는 merge commit 본문의 커밋을, 단일 커밋 PR에서는 squash 커밋을 읽는다. 현재 기본 버전 계산 구현은 `feat:`와 `feature:`를 minor 변경으로 처리하고 그 밖의 releasable fix를 patch 변경으로 처리한다. 다만 공식 사용법이 일관되게 권장하는 타입은 `feat:`와 `fix:`이므로 리로그에 적용할 때도 이 둘을 기준으로 두는 편이 모호하지 않다.
+release-please 기본 버전 계산 구현은 소문자 `feat:`와 `feature:`를 minor 변경으로 처리한다. `Feature:`는 대소문자가 달라 minor로 판정되지 않고, `[Feature] #이슈 제목`은 Conventional Commit 문법이 아니므로 타입 자체를 찾지 못한다.
+
+이 실험에서는 `main` push 직후 연결된 PR 제목을 읽어 `Feature:`와 `[Feature]`를 `feature:`로 정규화한 `BEGIN_COMMIT_OVERRIDE`를 PR 본문에 추가한다. `[Feature!]`와 `Feature!:`는 `feature!:`로 변환되어 major 변경이 된다. 정규식은 대소문자를 구분하지 않는다. GitHub 생성 릴리즈 노트는 원래 PR 제목을 사용하므로 `[Feature] #이슈 제목` 표시는 유지된다. 작성자가 수동으로 `BEGIN_COMMIT_OVERRIDE`를 넣었다면 자동 변환은 건너뛴다.
 
 현재 구성은 release-please가 버전·태그·Release PR을 담당하고, GitHub가 PR 라벨로 섹션을 만들며, 작은 Node.js 스크립트가 최종 GitHub Release 본문의 날짜·시각만 조정한다. 팀이 내부 커밋을 release-please가 파싱할 수 있는 형식으로 맞추기 어렵다면 `[Feature]`·`[Hotfix]`를 SemVer로 변환하는 전처리나 별도 버전 결정 단계가 추가로 필요하다.
 
