@@ -17,8 +17,8 @@ GitHub 연결로 `README.md`를 만드는 첫 쓰기 요청은 `403 Resource not
 | release-please 설정 | `release-please.default.json` | `release-please.github.json`의 `changelog-type: github` | GitHub 모드 뒤 Release 본문 후처리 |
 | 예상 본문 형태 | Conventional Commit 종류별 섹션 | `What's Changed` PR 목록과 `Full Changelog` 링크 | KST 릴리즈 시각, 리로그 제목별 헤더, PR 목록과 `Full Changelog` |
 | 버전 결정 | Conventional Commit | Conventional Commit, 동일 | Conventional Commit, 동일 |
-| 실제 Action 실행 | PR #4·#5 뒤 성공 | 수동 실행 성공 | 로컬 포매터 테스트 완료, 원격 미실행 |
-| 실제 Release URL | 비교 중에는 미생성 | [v1.0.0](https://github.com/gustn99/semantic-versioning-test/releases/tag/v1.0.0) | 미생성 |
+| 실제 Action 실행 | PR #4·#5 뒤 성공 | 수동 실행 성공 | [v1.2.0 생성 실행](https://github.com/gustn99/semantic-versioning-test/actions/runs/40817418402) 성공 |
+| 실제 Release URL | 비교 중에는 미생성 | [v1.0.0](https://github.com/gustn99/semantic-versioning-test/releases/tag/v1.0.0) | [v1.2.0](https://github.com/gustn99/semantic-versioning-test/releases/tag/v1.2.0) |
 
 [예비 실험의 기본 모드 결과](results/default-pr-1.md): PR #1을 합친 뒤 release-please가 PR #2를 만들고 `1.0.0`을 제안했다. 기본 노트에는 `### Features`와 커밋·이슈 링크가 있었고, 작성자와 `Full Changelog`는 없었다. PR #1은 리로그 PR 규칙을 재현하지 못했으므로 release-please 자체의 대조 자료로만 남긴다.
 
@@ -27,6 +27,8 @@ GitHub 연결로 `README.md`를 만드는 첫 쓰기 요청은 `403 Resource not
 [리로그 형식의 단일 커밋 PR 결과](results/rilog-single-commit-pr-5.md): PR #5는 커밋 제목을 PR 제목으로 그대로 쓰고 squash merge했다. 기본 release-please는 `fix:` 항목에 PR #5와 커밋 링크를 붙였다.
 
 [GitHub 생성 노트와 실제 v1.0.0 결과](results/github-mode-v1.0.0.md): `changelog-type: github`는 PR #1·#4·#5의 제목, 작성자, PR 링크를 `What's Changed`에 나열했다. release-please PR을 합친 뒤 같은 본문으로 v1.0.0 Release가 생성됐다.
+
+[라벨 분류와 실제 v1.2.0 결과](results/label-sections-v1.2.0.md): `release/core`가 붙은 PR #8·#11은 `핵심 변경`, 라벨이 없는 PR #10은 `기타 변경`에 들어갔다. 최종 Release에는 KST 릴리즈 시각, 작성자·PR 링크, `Full Changelog`가 표시됐다.
 
 ## 실제 실행 기록 양식
 
