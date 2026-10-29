@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 (2026-10-29)
+
+## What's Changed
+* feat: 리로그 형식의 릴리즈 노트 후처리 추가 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/6
+
+
+**Full Changelog**: https://github.com/gustn99/semantic-versioning-test/compare/v1.0.0...v1.1.0
+
 ## 1.0.0 (2026-10-29)
 
 ## What's Changed
