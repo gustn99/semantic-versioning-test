@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.1 (2026-10-29)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### 기타 변경
+* docs: 라벨 분류 릴리즈 실험 결과 기록 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/12
+
+
+**Full Changelog**: https://github.com/gustn99/semantic-versioning-test/compare/v1.2.0...v1.2.1
+
 ## 1.2.0 (2026-10-29)
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
