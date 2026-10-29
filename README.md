@@ -6,23 +6,26 @@
 
 - `release-please.default.json`: release-please 기본 체인지로그. Conventional Commit을 종류별로 묶고 관련 PR·커밋 링크를 넣는다.
 - `release-please.github.json`: 내장 `changelog-type: github`. GitHub의 릴리즈 노트 생성 API가 PR 제목·작성자·링크와 `Full Changelog` 비교 링크를 만든다.
-- `.github/workflows/release-please.yml`: `main` 대상 PR이 실제로 병합되면 `custom` 모드로 실행한다. Actions의 `Run workflow`에서 `default`, `github`, `custom`을 골라 비교할 수 있다.
+- `.github/workflows/release-please.yml`: `main` 대상 PR이 실제로 병합되면 Release PR 생성, 스쿼시 머지, GitHub Release 발행을 한 실행에서 처리한다. Actions의 `Run workflow`에서 `default`, `github`, `custom`을 고를 수 있다.
 - `.github/release.yml`: `release/core` 라벨이 붙은 PR은 `핵심 변경`, 나머지 PR은 `기타 변경`으로 분류한다.
 - `scripts/sync-release-please-commit-override.cjs`: 리로그의 `Feature` PR 제목을 release-please가 읽는 Conventional Commit 타입으로 변환한다.
+- `scripts/merge-release-pr.cjs`: release-please가 만든 단일 Release PR을 GitHub API로 스쿼시 머지한다.
 - `scripts/update-release-notes.cjs`: `custom` 모드에서 버전 헤딩을 제거하고 KST 릴리즈 시각을 추가한다.
 - `.release-please-manifest.json`: 첫 실행용 빈 버전 매니페스트. 첫 릴리즈 뒤에는 release-please가 버전을 기록한다.
 
-세 모드는 **같은 릴리즈 PR을 갱신**한다. `custom`은 release-please에 `github` 설정을 전달한 뒤, 실제 Release가 생성됐을 때만 본문을 다시 작성한다. release-please가 다음 릴리즈를 찾을 때 사용하는 Release PR 본문과 `CHANGELOG.md`는 수정하지 않는다. 이미 생성된 릴리즈의 본문을 모드 변경만으로 소급 수정하지 않는다.
+세 모드는 같은 릴리즈 생성 절차를 사용한다. `custom`은 release-please에 `github` 설정을 전달한 뒤, 실제 Release가 생성됐을 때만 본문을 다시 작성한다. 이미 생성된 릴리즈의 본문을 모드 변경만으로 소급 수정하지 않는다.
 
 ## 실험 순서
 
 1. 이 폴더의 파일을 실험 레포 루트에 넣는다. GitHub 저장소의 **Settings → Actions → General**에서 Actions가 PR을 만들 수 있게 설정한다. 워크플로의 `GITHUB_TOKEN`에는 `contents`, `issues`, `pull-requests` 쓰기 권한을 지정했다.
-2. 리로그의 두 PR 형태를 각각 만든다. 여러 커밋 PR은 이슈를 먼저 만들고 `[Header] #issue-number title` 제목으로 squash merge한다. 커밋 하나인 PR은 커밋 제목을 PR 제목으로 그대로 쓰고 squash merge한다. 병합 후 열린 release-please PR의 버전, 본문, `CHANGELOG.md`를 [실험 기록](docs/experiment-log.md)에 적는다.
-3. Actions에서 **release-please experiment → Run workflow**를 열고 `default`, `github`, `custom`을 각각 실행한다. 갱신된 PR의 본문과 `CHANGELOG.md`를 같은 기록에 적고 형식을 비교한다.
-4. 실제 릴리즈를 확인하려면 release-please PR을 합친다. Release PR의 `pull_request.closed` 실행에서 태그와 GitHub Release가 생성되었는지 확인한다. 첫 릴리즈는 `commits/v1.0.0`, 이후 릴리즈는 이전 태그와 새 태그의 비교 링크가 나오는지 확인한다.
+2. 리로그의 두 PR 형태를 각각 만든다. 여러 커밋 PR은 이슈를 먼저 만들고 `[Header] #issue-number title` 제목으로 squash merge한다. 커밋 하나인 PR은 커밋 제목을 PR 제목으로 그대로 쓰고 squash merge한다.
+3. main 병합으로 시작된 한 워크플로 안에서 Release PR이 만들어지고 스쿼시 머지된 뒤 태그와 GitHub Release가 생성되는지 확인한다. `CHANGELOG.md`와 `.release-please-manifest.json`도 main에 포함되어야 한다.
+4. 필요하면 Actions에서 **release-please experiment → Run workflow**를 열고 `default`, `github`, `custom` 중 하나를 골라 남아 있는 미발행 변경을 발행한다.
 5. `[Header] #issue-number title (#PR)` merge commit과 `fix: title (#PR)` squash commit이 각각 버전 결정과 노트에 어떻게 반영됐는지 비교한다. GitHub 형식으로 노트만 바꿔도 버전 결정 규칙은 바뀌지 않는다.
 
-`GITHUB_TOKEN`으로 생성한 release-please PR이나 Release는 다른 GitHub Actions 워크플로를 자동으로 다시 실행하지 않는다. 이 실험 워크플로는 사용자가 Release PR을 합칠 때 발생하는 `pull_request.closed` 이벤트로 release-please를 다시 실행한다. 별도 배포 워크플로가 Release 이벤트에 의존한다면 GitHub App 토큰이나 PAT 구성 여부를 별도로 결정해야 한다.
+`GITHUB_TOKEN`으로 생성하거나 머지한 release-please PR과 Release는 다른 GitHub Actions 워크플로를 자동으로 다시 실행하지 않는다. 이 특성을 이용해 한 실행에서 Release PR을 자동 머지한 뒤 release-please를 다시 호출한다. 첫 호출은 Release PR과 `CHANGELOG.md`를 준비하고, 두 번째 호출은 태그와 GitHub Release만 만든다. 자동 머지가 브랜치 보호 규칙에 막히면 실행은 실패하고 Release PR은 열린 상태로 남는다.
+
+별도 배포 워크플로가 `release.created`나 태그 push 이벤트에 의존한다면 기본 `GITHUB_TOKEN`만으로는 실행되지 않는다. 이 경우 GitHub App 토큰이나 PAT를 release-please와 자동 머지 단계에 함께 전달해야 한다.
 
 ## 현재 판단
 

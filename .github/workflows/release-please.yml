@@ -57,13 +57,32 @@ jobs:
           echo "config=$config" >> "$GITHUB_OUTPUT"
           echo "style=$style" >> "$GITHUB_OUTPUT"
 
-      - name: Run release-please
-        id: release
+      - name: Prepare release pull request
+        id: prepare
         uses: googleapis/release-please-action@v4
         with:
           config-file: ${{ steps.mode.outputs.config }}
           manifest-file: .release-please-manifest.json
           target-branch: main
+          skip-github-release: true
+
+      - name: Squash merge release pull request
+        if: steps.prepare.outputs.prs_created == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_PRS: ${{ steps.prepare.outputs.prs }}
+        run: node scripts/merge-release-pr.cjs
+
+      - name: Publish release
+        id: release
+        if: steps.prepare.outputs.prs_created == 'true'
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: ${{ steps.mode.outputs.config }}
+          manifest-file: .release-please-manifest.json
+          target-branch: main
+          skip-github-pull-request: true
 
       - name: Customize GitHub Release notes
         if: steps.release.outputs.release_created == 'true' && steps.mode.outputs.style == 'custom'
@@ -76,7 +95,7 @@ jobs:
       - name: Record run
         env:
           STYLE: ${{ steps.mode.outputs.style }}
-          PRS_CREATED: ${{ steps.release.outputs.prs_created }}
+          PRS_CREATED: ${{ steps.prepare.outputs.prs_created }}
           RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
           TAG_NAME: ${{ steps.release.outputs.tag_name }}
           RELEASE_URL: ${{ steps.release.outputs.html_url }}
@@ -84,7 +103,7 @@ jobs:
           {
             echo "## Release Please experiment"
             echo "- Notes style: \`$STYLE\`"
-            echo "- Release PR created or updated: \`$PRS_CREATED\`"
+            echo "- Release PR created and squash merged: \`$PRS_CREATED\`"
             echo "- Release created: \`$RELEASE_CREATED\`"
             if [ -n "$TAG_NAME" ]; then echo "- Tag: \`$TAG_NAME\`"; fi
             if [ -n "$RELEASE_URL" ]; then echo "- Release: $RELEASE_URL"; fi
