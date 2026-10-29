@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.2.0 (2026-10-29)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### 핵심 변경
+* feat: PR 라벨 기반 릴리즈 노트 분류 추가 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/8
+* fix: 릴리즈 분류 헤딩 레벨 보정 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/11
+### 기타 변경
+* docs: 기타 변경 섹션 테스트 항목 추가 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/10
+
+
+**Full Changelog**: https://github.com/gustn99/semantic-versioning-test/compare/v1.1.0...v1.2.0
+
 ## 1.1.0 (2026-10-29)
 
 ## What's Changed
