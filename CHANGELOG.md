@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.1.0 (2026-10-29)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### 핵심 변경
+* [Feature] #21 릴리즈 자동 발행 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/22
+
+
+**Full Changelog**: https://github.com/gustn99/semantic-versioning-test/compare/v3.0.0...v3.1.0
+
 ## 3.0.0 (2026-10-29)
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
