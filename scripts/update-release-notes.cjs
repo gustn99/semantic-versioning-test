@@ -1,22 +1,3 @@
-const SECTION_RULES = [
-  {
-    title: '새로운 기능',
-    pattern: /^(?:\[Feature\]|(?:feat|feature)(?:\([^)]*\))?:)/i,
-  },
-  {
-    title: '버그 수정',
-    pattern: /^(?:\[(?:Fix|Hotfix|Bugfix)\]|(?:fix|hotfix)(?:\([^)]*\))?:)/i,
-  },
-  {
-    title: '리팩터링',
-    pattern: /^(?:\[Refactor\]|refactor(?:\([^)]*\))?:)/i,
-  },
-  {
-    title: '문서',
-    pattern: /^(?:\[(?:Docs|Documentation)\]|docs(?:\([^)]*\))?:)/i,
-  },
-];
-
 function formatKoreanTime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
@@ -43,75 +24,20 @@ function formatKoreanTime(value) {
   return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} KST`;
 }
 
-function extractPullRequestTitle(entry) {
-  return entry
-    .replace(/^[-*]\s+/, '')
-    .replace(/\s+by\s+@[^\s]+\s+in\s+https?:\/\/\S+\s*$/i, '')
-    .trim();
-}
-
-function sectionFor(entry) {
-  const title = extractPullRequestTitle(entry);
-  return SECTION_RULES.find(({pattern}) => pattern.test(title))?.title ?? '기타 변경';
-}
-
-function extractGeneratedNotes(body) {
+function stripVersionHeading(body) {
   const lines = body.split(/\r?\n/);
-  const entries = [];
-  const contributorEntries = [];
-  let inChanges = false;
-  let inContributors = false;
+  const headingIndex = lines.findIndex((line) => /^##\s+\d+\.\d+\.\d+(?:[-+][^\s]+)?(?:\s+\([^)]+\))?\s*$/.test(line));
 
-  for (const line of lines) {
-    if (/^## What's Changed\s*$/.test(line)) {
-      inChanges = true;
-      inContributors = false;
-      continue;
-    }
-    if (/^## New Contributors\s*$/.test(line)) {
-      inChanges = false;
-      inContributors = true;
-      continue;
-    }
-    if (/^##\s+/.test(line)) {
-      inChanges = false;
-      inContributors = false;
-    }
-    if (inChanges && /^[-*]\s+/.test(line)) {
-      entries.push(line);
-    }
-    if (inContributors && /^[-*]\s+/.test(line)) {
-      contributorEntries.push(line);
-    }
+  if (headingIndex >= 0) {
+    lines.splice(headingIndex, 1);
   }
 
-  const fullChangelog = lines.find((line) => /^\*\*Full Changelog\*\*:\s+/.test(line));
-  return {contributorEntries, entries, fullChangelog};
+  return lines.join('\n').trim();
 }
 
 function formatReleaseNotes(body, publishedAt) {
-  const {contributorEntries, entries, fullChangelog} = extractGeneratedNotes(body);
-  const grouped = new Map(SECTION_RULES.map(({title}) => [title, []]));
-  grouped.set('기타 변경', []);
-
-  for (const entry of entries) {
-    grouped.get(sectionFor(entry)).push(entry);
-  }
-
-  const blocks = [`릴리즈 시각: ${formatKoreanTime(publishedAt)}`];
-  for (const [title, sectionEntries] of grouped) {
-    if (sectionEntries.length > 0) {
-      blocks.push(`## ${title}\n${sectionEntries.join('\n')}`);
-    }
-  }
-  if (contributorEntries.length > 0) {
-    blocks.push(`## New Contributors\n${contributorEntries.join('\n')}`);
-  }
-  if (fullChangelog) {
-    blocks.push(fullChangelog);
-  }
-
-  return `${blocks.join('\n\n')}\n`;
+  const generatedNotes = stripVersionHeading(body);
+  return `릴리즈 시각: ${formatKoreanTime(publishedAt)}\n\n${generatedNotes}\n`;
 }
 
 async function requestGitHub(path, options = {}) {
@@ -163,8 +89,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  extractPullRequestTitle,
   formatKoreanTime,
   formatReleaseNotes,
-  sectionFor,
+  stripVersionHeading,
 };
