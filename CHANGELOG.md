@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.0.0 (2026-10-29)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### 핵심 변경
+* feat!: 메이저 버전 릴리즈 테스트 추가 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/14
+### 기타 변경
+* docs: 라벨 분류 릴리즈 실험 결과 기록 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/12
+
+
+**Full Changelog**: https://github.com/gustn99/semantic-versioning-test/compare/v1.2.0...v2.0.0
+
 ## 1.2.0 (2026-10-29)
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
