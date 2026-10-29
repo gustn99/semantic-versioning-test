@@ -1,6 +1,6 @@
 # 커스텀 릴리즈 노트
 
-`custom` 모드는 release-please의 `github` 체인지로그를 입력으로 사용하고 실제 GitHub Release 본문만 후처리한다. Release PR 본문과 `CHANGELOG.md`는 release-please가 만든 상태로 남긴다.
+GitHub의 자동 생성 릴리즈 노트를 입력으로 사용하고 실제 GitHub Release 본문만 후처리한다. 저장소에는 별도의 `CHANGELOG.md`를 만들지 않는다.
 
 ## 바꾸는 내용
 
@@ -49,4 +49,4 @@
 
 GitHub의 `.github/release.yml`이 PR 라벨을 읽어 섹션을 만든다. 작성자나 리뷰어가 핵심 변경에만 `release/core`를 붙이고, 라벨이 없는 PR은 `*` 규칙으로 기타 변경에 들어간다. 두 라벨 중 하나를 매번 선택하게 만드는 대신 예외인 핵심 변경만 표시한다. `New Contributors`는 GitHub가 만든 내용을 그대로 둔다.
 
-포매터가 실패하면 워크플로도 실패한다. release-please가 만든 태그와 Release 자체는 이미 존재할 수 있으므로, 실패한 실행을 재시도하거나 해당 Release 본문을 확인해야 한다.
+포매터가 실패하면 워크플로도 실패한다. `gh release create`가 만든 태그와 Release 자체는 이미 존재할 수 있으므로 해당 Release 본문을 확인한 뒤 후처리 단계를 다시 실행해야 한다.

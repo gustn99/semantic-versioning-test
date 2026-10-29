@@ -1,5 +1,7 @@
 # 실험 기록
 
+> 이 문서는 release-please 채택 여부를 판단하기 위해 수행한 과거 실험 기록이다. 현재 워크플로는 release-please, Release PR, `CHANGELOG.md`, manifest를 사용하지 않는다.
+
 확인되지 않은 실행 결과는 채우지 않는다. 아래 항목은 실제 GitHub Actions 실행 뒤 기록한다.
 
 ## 준비 상태
