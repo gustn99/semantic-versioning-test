@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.0.0 (2026-10-29)
+
+<!-- Release notes generated using configuration in .github/release.yml at main -->
+
+## What's Changed
+### 핵심 변경
+* [Feature] #16 다중 커밋 메이저 버전 증가 검증 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/17
+* [Feature!] #19 리로그 Feature 제목 정규화 by @gustn99 in https://github.com/gustn99/semantic-versioning-test/pull/20
+
+
+**Full Changelog**: https://github.com/gustn99/semantic-versioning-test/compare/v2.0.0...v3.0.0
+
 ## 2.0.0 (2026-10-29)
 
 <!-- Release notes generated using configuration in .github/release.yml at main -->
