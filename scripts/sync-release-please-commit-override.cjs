@@ -2,10 +2,12 @@ const OVERRIDE_START = '<!-- release-please:type-normalizer:start -->';
 const OVERRIDE_END = '<!-- release-please:type-normalizer:end -->';
 
 function normalizeFeatureTitle(title) {
-  const bracketMatch = title.match(/^\[feature(!)?\]\s+(?:#\d+\s+)?(.+)$/i);
+  const bracketMatch = title.match(
+    /^\[(?:[a-z]+\/)?(feat|feature)(!)?\]\s+(?:#\d+\s+)?(.+)$/i
+  );
   if (bracketMatch) {
-    const breaking = bracketMatch[1] === '!';
-    return `feature${breaking ? '!' : ''}: ${bracketMatch[2].trim()}`;
+    const [, type, breaking = '', summary] = bracketMatch;
+    return `${type.toLowerCase()}${breaking}: ${summary.trim()}`;
   }
 
   const conventionalMatch = title.match(/^(feat|feature)(\([^)]*\))?(!)?\s*:\s*(.+)$/i);
@@ -54,38 +56,31 @@ async function requestGitHub(path, options = {}) {
 
 async function syncCommitOverride() {
   const repository = process.env.REPOSITORY;
-  const commitSha = process.env.COMMIT_SHA;
-  if (!process.env.GITHUB_TOKEN || !repository || !commitSha) {
-    throw new Error('GITHUB_TOKEN, REPOSITORY and COMMIT_SHA are required');
+  const pullRequestNumber = process.env.PR_NUMBER;
+  const pullRequestTitle = process.env.PR_TITLE;
+  const pullRequestBody = process.env.PR_BODY ?? '';
+  if (!process.env.GITHUB_TOKEN || !repository || !pullRequestNumber || !pullRequestTitle) {
+    throw new Error('GITHUB_TOKEN, REPOSITORY, PR_NUMBER and PR_TITLE are required');
   }
 
-  const pullRequests = await requestGitHub(
-    `/repos/${repository}/commits/${encodeURIComponent(commitSha)}/pulls`
-  );
-  const pullRequest = pullRequests.find(({merged_at: mergedAt}) => mergedAt);
-  if (!pullRequest) {
-    console.log(`No merged pull request found for ${commitSha}`);
-    return;
-  }
-
-  const normalizedTitle = normalizeFeatureTitle(pullRequest.title);
+  const normalizedTitle = normalizeFeatureTitle(pullRequestTitle);
   if (!normalizedTitle) {
-    console.log(`No feature title to normalize for pull request #${pullRequest.number}`);
+    console.log(`No feature title to normalize for pull request #${pullRequestNumber}`);
     return;
   }
 
-  const body = appendCommitOverride(pullRequest.body ?? '', normalizedTitle);
+  const body = appendCommitOverride(pullRequestBody, normalizedTitle);
   if (body === null) {
-    console.log(`Pull request #${pullRequest.number} already has a commit override`);
+    console.log(`Pull request #${pullRequestNumber} already has a commit override`);
     return;
   }
 
-  await requestGitHub(`/repos/${repository}/pulls/${pullRequest.number}`, {
+  await requestGitHub(`/repos/${repository}/pulls/${pullRequestNumber}`, {
     method: 'PATCH',
     body: JSON.stringify({body}),
     headers: {'Content-Type': 'application/json'},
   });
-  console.log(`Normalized pull request #${pullRequest.number} as ${normalizedTitle}`);
+  console.log(`Normalized pull request #${pullRequestNumber} as ${normalizedTitle}`);
 }
 
 if (require.main === module) {
