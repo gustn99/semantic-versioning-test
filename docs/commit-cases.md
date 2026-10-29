@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | `[Hotfix] #786 본문 Base64 미디어 저장 차단 (#787)` | 2개 커밋 PR의 merge commit. PR 제목은 `[Hotfix] #786 본문 Base64 미디어 저장 차단` | 바깥 제목은 Conventional Commit이 아니다. 본문의 `fix:` 커밋 두 개를 release-please가 읽는지 확인 필요 |
 | `[Feature] #756 비회원 진입점 추가 (#757)` | 17개 커밋 PR의 squash 결과가 아니라 merge commit. PR 제목은 `[Feature] #756 비회원 진입점 추가` | 바깥 제목은 Conventional Commit이 아니다. merge commit 본문과 하위 커밋 처리 확인 필요 |
-| `feature: 더 리로그 이용 행동의 모니터링 연결` | `feature:` 접두어 | release-please의 기본 기능 추가 접두어 `feat:`와 다르다 |
+| `feature: 더 리로그 이용 행동의 모니터링 연결` | `feature:` 접두어 | Conventional Commit의 권장 `feat:`와 다르지만 현재 기본 버전 계산 구현은 `feature`도 minor로 처리한다. 실제 Action 입력으로는 별도 확인 필요 |
 | `fix: 개발 환경 조회 등록 기본 활성화 (#760)` | Conventional Commit | patch 후보 |
 | `Merge pull request #765 from woowacourse-teams/develop` | 브랜치 통합 merge 커밋 | 제목만으로 릴리즈 종류를 결정할 수 없다 |
 

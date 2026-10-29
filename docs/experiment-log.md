@@ -12,17 +12,21 @@ GitHub 연결로 `README.md`를 만드는 첫 쓰기 요청은 `403 Resource not
 
 ## 비교 기준
 
-| 항목 | 기본 모드 | GitHub 모드 |
-| --- | --- | --- |
-| release-please 설정 | `release-please.default.json` | `release-please.github.json`의 `changelog-type: github` |
-| 예상 본문 형태 | Conventional Commit 종류별 섹션 | `What's Changed` PR 목록과 `Full Changelog` 링크 |
-| 버전 결정 | Conventional Commit | Conventional Commit, 동일 |
-| 실제 Action 실행 | PR #1 뒤 실행, 권한 설정 때문에 마지막 단계 실패 | 미실행 |
-| 실제 Release URL | 미생성 | 미생성 |
+| 항목 | 기본 모드 | GitHub 모드 | Custom 모드 |
+| --- | --- | --- | --- |
+| release-please 설정 | `release-please.default.json` | `release-please.github.json`의 `changelog-type: github` | GitHub 모드 뒤 Release 본문 후처리 |
+| 예상 본문 형태 | Conventional Commit 종류별 섹션 | `What's Changed` PR 목록과 `Full Changelog` 링크 | KST 릴리즈 시각, 리로그 제목별 헤더, PR 목록과 `Full Changelog` |
+| 버전 결정 | Conventional Commit | Conventional Commit, 동일 | Conventional Commit, 동일 |
+| 실제 Action 실행 | PR #4·#5 뒤 성공 | 수동 실행 성공 | 로컬 포매터 테스트 완료, 원격 미실행 |
+| 실제 Release URL | 비교 중에는 미생성 | [v1.0.0](https://github.com/gustn99/semantic-versioning-test/releases/tag/v1.0.0) | 미생성 |
 
 [예비 실험의 기본 모드 결과](results/default-pr-1.md): PR #1을 합친 뒤 release-please가 PR #2를 만들고 `1.0.0`을 제안했다. 기본 노트에는 `### Features`와 커밋·이슈 링크가 있었고, 작성자와 `Full Changelog`는 없었다. PR #1은 리로그 PR 규칙을 재현하지 못했으므로 release-please 자체의 대조 자료로만 남긴다.
 
 [리로그 형식의 여러 커밋 PR 결과](results/rilog-multi-commit-pr-4.md): PR #4는 `[Hotfix] #3 title`, 내부 `fix:` 커밋 두 개, merge commit 구조로 만들었다. 기본 release-please는 내부 커밋 두 개를 `Bug Fixes`에 넣었다. PR 링크와 작성자는 표시하지 않았다.
+
+[리로그 형식의 단일 커밋 PR 결과](results/rilog-single-commit-pr-5.md): PR #5는 커밋 제목을 PR 제목으로 그대로 쓰고 squash merge했다. 기본 release-please는 `fix:` 항목에 PR #5와 커밋 링크를 붙였다.
+
+[GitHub 생성 노트와 실제 v1.0.0 결과](results/github-mode-v1.0.0.md): `changelog-type: github`는 PR #1·#4·#5의 제목, 작성자, PR 링크를 `What's Changed`에 나열했다. release-please PR을 합친 뒤 같은 본문으로 v1.0.0 Release가 생성됐다.
 
 ## 실제 실행 기록 양식
 
@@ -46,6 +50,14 @@ GitHub 연결로 `README.md`를 만드는 첫 쓰기 요청은 `403 Resource not
 - PR 제목·작성자·링크 포함 여부:
 - `Full Changelog` 비교 범위:
 - PR 본문 및 `CHANGELOG.md` 내용:
+
+### Custom 모드
+
+- Actions 실행 URL:
+- 생성된 Release URL:
+- 첫 줄의 KST 날짜·시각:
+- PR 제목별 헤더 분류:
+- `New Contributors`와 `Full Changelog` 유지 여부:
 
 ### 리로그식 커밋
 
