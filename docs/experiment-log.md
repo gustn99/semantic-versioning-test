@@ -22,6 +22,8 @@ GitHub 연결로 `README.md`를 만드는 첫 쓰기 요청은 `403 Resource not
 
 [예비 실험의 기본 모드 결과](results/default-pr-1.md): PR #1을 합친 뒤 release-please가 PR #2를 만들고 `1.0.0`을 제안했다. 기본 노트에는 `### Features`와 커밋·이슈 링크가 있었고, 작성자와 `Full Changelog`는 없었다. PR #1은 리로그 PR 규칙을 재현하지 못했으므로 release-please 자체의 대조 자료로만 남긴다.
 
+[리로그 형식의 여러 커밋 PR 결과](results/rilog-multi-commit-pr-4.md): PR #4는 `[Hotfix] #3 title`, 내부 `fix:` 커밋 두 개, merge commit 구조로 만들었다. 기본 release-please는 내부 커밋 두 개를 `Bug Fixes`에 넣었다. PR 링크와 작성자는 표시하지 않았다.
+
 ## 실제 실행 기록 양식
 
 ### 입력
