@@ -1,7 +1,8 @@
 name: release-please experiment
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches: [main]
   workflow_dispatch:
     inputs:
@@ -18,13 +19,30 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: release-please-${{ github.ref }}
+  group: release-please-main
   cancel-in-progress: false
 
 jobs:
   release:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
+      - name: Check out release helpers
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Normalize Rilog feature title for release-please
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node scripts/sync-release-please-commit-override.cjs
+
       - name: Select notes format
         id: mode
         env:
@@ -45,10 +63,7 @@ jobs:
         with:
           config-file: ${{ steps.mode.outputs.config }}
           manifest-file: .release-please-manifest.json
-
-      - name: Check out release notes formatter
-        if: steps.release.outputs.release_created == 'true' && steps.mode.outputs.style == 'custom'
-        uses: actions/checkout@v4
+          target-branch: main
 
       - name: Customize GitHub Release notes
         if: steps.release.outputs.release_created == 'true' && steps.mode.outputs.style == 'custom'
