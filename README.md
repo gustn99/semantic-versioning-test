@@ -38,7 +38,7 @@ shout-outz의 [v1.9.0 릴리즈](https://github.com/woowacourse-teams/2026-shout
 
 release-please 기본 버전 계산 구현은 소문자 `feat:`와 `feature:`를 minor 변경으로 처리한다. `Feature:`는 대소문자가 달라 minor로 판정되지 않고, `[Feature] #이슈 제목`은 Conventional Commit 문법이 아니므로 타입 자체를 찾지 못한다.
 
-이 실험에서는 `pull_request.closed` 이벤트에서 실제 병합 여부를 확인하고 이벤트에 포함된 PR 제목을 사용한다. `Feature:`와 `[Feature]`는 `feature:`로 정규화한 `BEGIN_COMMIT_OVERRIDE`를 PR 본문에 추가한다. Shout-outz 형식인 `[ALL/feat]`처럼 파트가 포함된 제목도 `feat:`로 변환한다. `[Feature!]`, `Feature!:`와 `[ALL/feat!]`는 breaking change 타입으로 변환되어 major 변경이 된다. 정규식은 대소문자를 구분하지 않는다.
+이 실험에서는 `pull_request.closed` 이벤트에서 실제 병합 여부를 확인하고 이벤트에 포함된 PR 제목을 사용한다. `Feature:`와 `[Feature]`는 `feature:`로 정규화한 `BEGIN_COMMIT_OVERRIDE`를 PR 본문에 추가한다. `[Feature!]`와 `Feature!:`는 breaking change 타입으로 변환되어 major 변경이 된다. 정규식은 대소문자를 구분하지 않는다.
 
 PR 제목은 셸 코드에 직접 넣지 않고 환경 변수로 전달한다. GitHub 생성 릴리즈 노트는 원래 PR 제목을 사용하므로 `[Feature] #이슈 제목` 표시는 유지된다. 작성자가 수동으로 `BEGIN_COMMIT_OVERRIDE`를 넣었다면 자동 변환은 건너뛴다. 태그 계산과 GitHub Release 생성은 release-please에 맡기므로 Shout-outz의 `gh release create` 단계는 사용하지 않는다.
 

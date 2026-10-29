@@ -18,7 +18,6 @@ test('리로그 Feature 헤더를 minor 변경으로 정규화한다', () => {
     'feature: 검색 기능 추가'
   );
   assert.equal(normalizeFeatureTitle('[feature] 검색 기능 추가'), 'feature: 검색 기능 추가');
-  assert.equal(normalizeFeatureTitle('[ALL/feat] 검색 기능 추가'), 'feat: 검색 기능 추가');
 });
 
 test('리로그 Feature! 헤더를 breaking change로 정규화한다', () => {
@@ -27,11 +26,11 @@ test('리로그 Feature! 헤더를 breaking change로 정규화한다', () => {
     'feature!: 검색 API 교체'
   );
   assert.equal(normalizeFeatureTitle('Feature!: 검색 API 교체'), 'feature!: 검색 API 교체');
-  assert.equal(normalizeFeatureTitle('[BE/FEATURE!] 검색 API 교체'), 'feature!: 검색 API 교체');
 });
 
 test('Feature 계열이 아닌 제목은 변경하지 않는다', () => {
   assert.equal(normalizeFeatureTitle('[Fix] #123 검색 오류 수정'), null);
+  assert.equal(normalizeFeatureTitle('[ALL/feat] 검색 기능 추가'), null);
   assert.equal(normalizeFeatureTitle('docs: 검색 문서 수정'), null);
 });
 

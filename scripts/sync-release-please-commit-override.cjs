@@ -2,9 +2,7 @@ const OVERRIDE_START = '<!-- release-please:type-normalizer:start -->';
 const OVERRIDE_END = '<!-- release-please:type-normalizer:end -->';
 
 function normalizeFeatureTitle(title) {
-  const bracketMatch = title.match(
-    /^\[(?:[a-z]+\/)?(feat|feature)(!)?\]\s+(?:#\d+\s+)?(.+)$/i
-  );
+  const bracketMatch = title.match(/^\[(feat|feature)(!)?\]\s+(?:#\d+\s+)?(.+)$/i);
   if (bracketMatch) {
     const [, type, breaking = '', summary] = bracketMatch;
     return `${type.toLowerCase()}${breaking}: ${summary.trim()}`;
