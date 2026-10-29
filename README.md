@@ -1,69 +1,71 @@
 # 리로그 릴리즈 노트 실험
 
-`gustn99/semantic-versioning-test`에서 release-please의 기본 체인지로그와 GitHub 생성 체인지로그를 같은 커밋 기록에 적용해 비교한다. 이후 리로그 `production`에 필요한 커스텀 범위를 판단하는 것이 목적이다.
+`main`에 PR이 병합되면 PR 제목으로 다음 SemVer를 계산하고 태그와 GitHub Release를 바로 만든다. 리로그 `production`에 적용할 때는 워크플로의 대상 브랜치만 바꾸면 된다.
 
-## 구성
+release-please 실험 결과, PR마다 즉시 릴리즈하는 정책에서는 Release PR과 `CHANGELOG.md` 커밋이 같은 내용을 중복 관리했다. 현재 구성은 GitHub Releases를 릴리즈 기록으로 사용하며 별도의 버전 파일이나 릴리즈 커밋을 만들지 않는다. 이전 release-please 비교 결과는 [실험 기록](docs/experiment-log.md)에 남겨 두었다.
 
-- `release-please.default.json`: release-please 기본 체인지로그. Conventional Commit을 종류별로 묶고 관련 PR·커밋 링크를 넣는다.
-- `release-please.github.json`: 내장 `changelog-type: github`. GitHub의 릴리즈 노트 생성 API가 PR 제목·작성자·링크와 `Full Changelog` 비교 링크를 만든다.
-- `.github/workflows/release-please.yml`: `main` 대상 PR이 실제로 병합되면 Release PR 생성, 스쿼시 머지, GitHub Release 발행을 한 실행에서 처리한다. Actions의 `Run workflow`에서 `default`, `github`, `custom`을 고를 수 있다.
-- `.github/release.yml`: `release/core` 라벨이 붙은 PR은 `핵심 변경`, 나머지 PR은 `기타 변경`으로 분류한다.
-- `scripts/sync-release-please-commit-override.cjs`: 리로그의 `Feature` PR 제목을 release-please가 읽는 Conventional Commit 타입으로 변환한다.
-- `scripts/merge-release-pr.cjs`: release-please가 만든 단일 Release PR을 GitHub API로 스쿼시 머지한다.
-- `scripts/update-release-notes.cjs`: `custom` 모드에서 버전 헤딩을 제거하고 KST 릴리즈 시각을 추가한다.
-- `.release-please-manifest.json`: 첫 실행용 빈 버전 매니페스트. 첫 릴리즈 뒤에는 release-please가 버전을 기록한다.
+## 동작
 
-세 모드는 같은 릴리즈 생성 절차를 사용한다. `custom`은 release-please에 `github` 설정을 전달한 뒤, 실제 Release가 생성됐을 때만 본문을 다시 작성한다. 이미 생성된 릴리즈의 본문을 모드 변경만으로 소급 수정하지 않는다.
+1. `main` 대상 PR이 실제로 병합됐을 때만 워크플로가 실행된다.
+2. PR 제목의 작업 종류와 `!`를 읽어 최신 `v*` 태그에서 다음 버전을 계산한다.
+3. 병합 SHA에 태그와 GitHub Release를 만들고 GitHub 자동 생성 노트를 사용한다.
+4. `.github/release.yml`이 PR을 `핵심 변경`과 `기타 변경`으로 분류한다.
+5. 후처리 스크립트가 릴리즈 시각을 KST 일반 본문으로 넣고 불필요한 바깥 헤딩을 제거한다.
 
-## 실험 순서
+릴리즈 PR, `CHANGELOG.md`, manifest, 버전 갱신 커밋은 만들지 않는다. 릴리즈가 가리키는 커밋은 병합된 제품 PR의 squash merge SHA다.
 
-1. 이 폴더의 파일을 실험 레포 루트에 넣는다. GitHub 저장소의 **Settings → Actions → General**에서 Actions가 PR을 만들 수 있게 설정한다. 워크플로의 `GITHUB_TOKEN`에는 `contents`, `issues`, `pull-requests` 쓰기 권한을 지정했다.
-2. 리로그의 두 PR 형태를 각각 만든다. 여러 커밋 PR은 이슈를 먼저 만들고 `[Header] #issue-number title` 제목으로 squash merge한다. 커밋 하나인 PR은 커밋 제목을 PR 제목으로 그대로 쓰고 squash merge한다.
-3. main 병합으로 시작된 한 워크플로 안에서 Release PR이 만들어지고 스쿼시 머지된 뒤 태그와 GitHub Release가 생성되는지 확인한다. `CHANGELOG.md`와 `.release-please-manifest.json`도 main에 포함되어야 한다.
-4. 필요하면 Actions에서 **release-please experiment → Run workflow**를 열고 `default`, `github`, `custom` 중 하나를 골라 남아 있는 미발행 변경을 발행한다.
-5. `[Header] #issue-number title (#PR)` merge commit과 `fix: title (#PR)` squash commit이 각각 버전 결정과 노트에 어떻게 반영됐는지 비교한다. GitHub 형식으로 노트만 바꿔도 버전 결정 규칙은 바뀌지 않는다.
+## 버전 규칙
 
-`GITHUB_TOKEN`으로 생성하거나 머지한 release-please PR과 Release는 다른 GitHub Actions 워크플로를 자동으로 다시 실행하지 않는다. 이 특성을 이용해 한 실행에서 Release PR을 자동 머지한 뒤 release-please를 다시 호출한다. 첫 호출은 Release PR과 `CHANGELOG.md`를 준비하고, 두 번째 호출은 태그와 GitHub Release만 만든다. 자동 머지가 브랜치 보호 규칙에 막히면 실행은 실패하고 Release PR은 열린 상태로 남는다.
+브래킷 형식과 커밋 제목 형식을 모두 읽는다. 타입은 대소문자를 구분하지 않는다.
 
-별도 배포 워크플로가 `release.created`나 태그 push 이벤트에 의존한다면 기본 `GITHUB_TOKEN`만으로는 실행되지 않는다. 이 경우 GitHub App 토큰이나 PAT를 release-please와 자동 머지 단계에 함께 전달해야 한다.
+| PR 제목 | 버전 변경 |
+| --- | --- |
+| `[Feature!] #123 공개 API 변경` | major |
+| `Feature!: 공개 API 변경` | major |
+| `[Feature] #123 기능 추가` | minor |
+| `feat: 기능 추가` | minor |
+| `[Fix]`, `[Hotfix]`, `fix:`, 그 밖의 타입 | patch |
 
-## 현재 판단
+저장소에 SemVer 태그가 하나도 없으면 작업 종류와 관계없이 `v0.1.0`을 만든다. 형식을 읽을 수 없는 PR 제목은 릴리즈하지 않고 워크플로를 실패시킨다.
 
-shout-outz의 [v1.9.0 릴리즈](https://github.com/woowacourse-teams/2026-shout-outz/releases/tag/v1.9.0)는 `## What's Changed` 아래 PR 제목·작성자·PR URL을 나열하고, 마지막에 `Full Changelog` 비교 링크를 둔다. [release-please의 GitHub 체인지로그 구현](https://github.com/googleapis/release-please/blob/main/src/changelog-notes/github.ts)은 GitHub 생성 노트 API를 호출하므로 이 형식을 별도 포매터 없이 먼저 시험할 수 있다.
+## 릴리즈 노트
 
-`changelog-type: github`만으로 [실제 v1.0.0 Release](https://github.com/gustn99/semantic-versioning-test/releases/tag/v1.0.0)에 PR 제목·작성자·링크와 `Full Changelog`가 생성됐다. 리로그의 `[Header] #issue-number title`도 수정 없이 표시됐다.
+`.github/release.yml`의 `release/core` 라벨이 붙은 PR은 `핵심 변경`에 들어간다. 나머지 PR은 `*` 규칙으로 `기타 변경`에 들어가므로 별도의 misc 라벨은 필요하지 않다.
 
-요청한 최종 형식에는 GitHub 라벨 분류와 작은 후처리가 필요하다. `release/core` 라벨이 붙은 PR은 `핵심 변경`에 들어가고 나머지는 `기타 변경`에 들어간다. `feat`, `fix`, `refactor` 같은 접두어는 변경 종류이고 핵심 여부는 제품 판단이므로 제목 정규식으로 분류하지 않는다.
+최종 본문은 다음 형식을 사용한다.
 
-`custom` 모드는 생성된 Release에서 버전 헤딩과 바깥 `What's Changed` 헤딩을 제거한다. `핵심 변경`과 `기타 변경`을 2단계 헤딩으로 올리고 맨 위에 `릴리즈 시각: YYYY-MM-DD HH:mm:ss KST`를 일반 텍스트로 쓴다.
+```md
+릴리즈 시각: 2026-10-29 14:02:08 KST
 
-각 항목의 작성자와 PR 링크, `New Contributors`, 마지막 `Full Changelog`는 유지한다. `New Contributors` 제거는 필요한 결과에 비해 복잡도만 늘리므로 적용하지 않았다. 자세한 입력·출력 예시는 [커스텀 릴리즈 노트](docs/custom-release-notes.md)에 적었다.
+## 핵심 변경
+* [Feature] #123 기능 추가 by @author in #124
 
-release-please 기본 버전 계산 구현은 소문자 `feat:`와 `feature:`를 minor 변경으로 처리한다. `Feature:`는 대소문자가 달라 minor로 판정되지 않고, `[Feature] #이슈 제목`은 Conventional Commit 문법이 아니므로 타입 자체를 찾지 못한다.
+## 기타 변경
+* [Fix] #125 오류 수정 by @author in #126
 
-이 실험에서는 `pull_request.closed` 이벤트에서 실제 병합 여부를 확인하고 이벤트에 포함된 PR 제목을 사용한다. `Feature:`와 `[Feature]`는 `feature:`로 정규화한 `BEGIN_COMMIT_OVERRIDE`를 PR 본문에 추가한다. `[Feature!]`와 `Feature!:`는 breaking change 타입으로 변환되어 major 변경이 된다. 정규식은 대소문자를 구분하지 않는다.
+**Full Changelog**: v1.0.0...v1.1.0
+```
 
-PR 제목은 셸 코드에 직접 넣지 않고 환경 변수로 전달한다. GitHub 생성 릴리즈 노트는 원래 PR 제목을 사용하므로 `[Feature] #이슈 제목` 표시는 유지된다. 작성자가 수동으로 `BEGIN_COMMIT_OVERRIDE`를 넣었다면 자동 변환은 건너뛴다. 태그 계산과 GitHub Release 생성은 release-please에 맡기므로 Shout-outz의 `gh release create` 단계는 사용하지 않는다.
+GitHub가 PR 제목, 작성자, PR 링크, 기여자와 `Full Changelog`를 생성한다. `scripts/update-release-notes.cjs`는 날짜·시각과 헤딩만 조정한다.
 
-현재 구성은 release-please가 버전·태그·Release PR을 담당하고, GitHub가 PR 라벨로 섹션을 만들며, 작은 Node.js 스크립트가 최종 GitHub Release 본문의 날짜·시각만 조정한다. 팀이 내부 커밋을 release-please가 파싱할 수 있는 형식으로 맞추기 어렵다면 `[Feature]`·`[Hotfix]`를 SemVer로 변환하는 전처리나 별도 버전 결정 단계가 추가로 필요하다.
+## 운영상 주의점
 
-## `release-type: simple`의 의미
+동시에 여러 PR이 병합돼 같은 최신 태그를 읽는 문제를 막기 위해 `release-tag` concurrency group을 직렬로 실행한다.
 
-`release-type`은 릴리즈 노트 모양이 아니라 **버전을 기록할 파일과 릴리즈 전략**을 고른다. `simple`은 언어·패키지 관리자 전용 파일을 전제로 하지 않고 기본적으로 `CHANGELOG.md`만 갱신한다. `version-file`을 지정하면 별도 버전 파일도 갱신한다. 이 실험 레포처럼 `package.json`, `pyproject.toml`, `pom.xml` 등이 없는 저장소에 맞는다.
+기본 `GITHUB_TOKEN`으로 만든 태그와 Release는 다른 GitHub Actions 워크플로를 실행하지 않는다. 별도 배포 워크플로가 `release.created` 또는 태그 push 이벤트를 받아야 한다면 GitHub App 토큰이나 PAT를 사용해야 한다.
 
-프로젝트에 버전 파일이 있다면 해당 생태계 전략을 선택해야 한다. 예를 들어 `node`는 `package.json`, `python`은 Python 패키지 버전 파일, `maven`은 `pom.xml`과 SNAPSHOT 흐름, `rust`는 `Cargo.toml`, `helm`은 `Chart.yaml`을 함께 갱신한다. 그 밖에 `bazel`, `dart`, `elixir`, `expo`, `go`, `java`, `krm-blueprint`, `ocaml`, `php`, `R`, `ruby`, `sfdx`, `terraform-module` 전략이 있다. 지원 목록은 [release-please README의 Strategy types](https://github.com/googleapis/release-please#strategy-language-types-supported)를 기준으로 고른다.
+배포된 코드를 추적하려면 애플리케이션 로그나 상태 API에 태그와 Git SHA를 기록한다. GitHub Release는 변경 범위를 찾는 색인이고, 실제 원인 분석에는 해당 태그의 코드 diff가 필요하다.
 
-`release-type`과 `changelog-type`은 독립적이다. 지금 설정은 `simple`로 갱신 파일을 정하고 `github`으로 PR 목록 기반 노트를 만든 뒤, `custom` 단계에서 표시 형식만 바꾼다.
+## 파일
 
-실험에 사용할 구체적인 커밋 사례와 예상 차이는 [커밋 사례](docs/commit-cases.md)에 정리했다.
-
-상세 입력과 결과는 [실험 기록](docs/experiment-log.md)과 `docs/results/`에 남겼다.
+- `.github/workflows/release-tag.yml`: 버전 계산, 태그와 Release 생성
+- `.github/release.yml`: 라벨 기반 릴리즈 노트 분류
+- `scripts/update-release-notes.cjs`: KST 시각과 헤딩 후처리
+- `scripts/update-release-notes.test.cjs`: 릴리즈 노트 후처리 테스트
+- `docs/experiment-log.md`: release-please와 GitHub 생성 노트 비교 기록
 
 ## 근거
 
-- [release-please README](https://github.com/googleapis/release-please): Release PR, Conventional Commit, 릴리즈 절차
-- [release-please-action README](https://github.com/googleapis/release-please-action): Action 설정, 출력값, `GITHUB_TOKEN` 이벤트 제한
-- [release-please customizing](https://github.com/googleapis/release-please/blob/main/docs/customizing.md): `default`와 `github` 체인지로그 유형
-- [release-please design](https://github.com/googleapis/release-please/blob/main/docs/design.md): `simple` 전략과 Release PR 본문 의존성
-- [GitHub 자동 생성 릴리즈 노트](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes): 기여자 목록과 라벨 기반 카테고리 설정
-- [shout-outz 릴리즈 워크플로](https://github.com/woowacourse-teams/2026-shout-outz/blob/main/.github/workflows/release-tag.yml): `gh release create --generate-notes` 사용
+- [Shout-outz 릴리즈 워크플로](https://github.com/woowacourse-teams/2026-shout-outz/blob/develop/.github/workflows/release-tag.yml)
+- [GitHub 자동 생성 릴리즈 노트](https://docs.github.com/repositories/releasing-projects-on-github/automatically-generated-release-notes)
+- [GitHub Actions의 `GITHUB_TOKEN` 이벤트 제한](https://docs.github.com/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow)

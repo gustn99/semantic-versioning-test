@@ -1,0 +1,95 @@
+name: Create Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+concurrency:
+  group: release-tag
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out release helpers
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Calculate next version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -euo pipefail
+
+          bracket_pattern='^\[([A-Za-z]+)(!?)\]'
+          conventional_pattern='^([A-Za-z]+)(\([^)]*\))?(!?)[[:space:]]*:'
+
+          if [[ "$PR_TITLE" =~ $bracket_pattern ]]; then
+            type="${BASH_REMATCH[1]}"
+            breaking="${BASH_REMATCH[2]}"
+          elif [[ "$PR_TITLE" =~ $conventional_pattern ]]; then
+            type="${BASH_REMATCH[1]}"
+            breaking="${BASH_REMATCH[3]}"
+          else
+            echo "::error::PR 제목에서 릴리즈 타입을 찾을 수 없습니다: $PR_TITLE"
+            exit 1
+          fi
+
+          type="$(printf '%s' "$type" | tr '[:upper:]' '[:lower:]')"
+          latest="$(gh api --paginate "repos/$GITHUB_REPOSITORY/tags" --jq '.[].name' \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+
+          if [ -z "$latest" ]; then
+            tag="v0.1.0"
+          else
+            IFS=. read -r major minor patch <<< "${latest#v}"
+            if [ -n "$breaking" ]; then
+              tag="v$((major + 1)).0.0"
+            elif [ "$type" = "feat" ] || [ "$type" = "feature" ]; then
+              tag="v${major}.$((minor + 1)).0"
+            else
+              tag="v${major}.${minor}.$((patch + 1))"
+            fi
+          fi
+
+          echo "[$type$breaking] ${latest:-없음} → $tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          gh release create "$TAG_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$MERGE_SHA" \
+            --title "$TAG_NAME" \
+            --generate-notes
+
+      - name: Customize GitHub Release notes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+        run: node scripts/update-release-notes.cjs
+
+      - name: Record run
+        env:
+          TAG_NAME: ${{ steps.version.outputs.tag }}
+        run: |
+          {
+            echo "## Release"
+            echo "- Tag: \`$TAG_NAME\`"
+            echo "- Release: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/releases/tag/$TAG_NAME"
+          } >> "$GITHUB_STEP_SUMMARY"
