@@ -25,6 +25,6 @@ Conventional Commit에서 타입 또는 선택적 스코프 뒤에 `!`를 붙이
 
 `v1.2.0`에서 `feat!: 메이저 버전 릴리즈 테스트 추가` 커밋을 `main`에 squash merge한 결과 `v2.0.0` Release가 생성됐다. 같은 의미를 커밋 본문에 적어야 할 때는 빈 줄 뒤에 `BREAKING CHANGE: 변경 설명` footer를 사용할 수 있다.
 
-다음 실험은 PR 제목에 `!`가 없고 내부 커밋에만 `feat!:`가 있는 여러 커밋 PR이다. PR을 squash하지 않고 merge commit으로 합쳐 내부 커밋 제목이 merge commit 본문에 남게 한다. 현재 버전 `2.0.0`에서 release-please가 내부 breaking change를 읽으면 예상 다음 버전은 `3.0.0`이다.
+다음 실험은 PR 제목에 `!`가 없고 내부 커밋에만 `feat!:`가 있는 여러 커밋 PR이다. squash merge의 최종 커밋 제목은 `!` 없는 PR 제목을 사용한다. 내부 breaking change가 `main` 기록에 남는지, release-please가 Release PR을 만드는지는 실제 실행 결과로 판단한다.
 
 번호는 실험 레포의 실제 PR·이슈 번호를 쓴다. 첫 테스트 PR #1은 이슈 번호가 빠졌고 squash 커밋을 `feat:`로 바꿨으므로 리로그 재현 사례에서 제외한다. 리로그에서 어떤 머지 방식을 유지할지 결정하기 전에는 한 가지 방식의 결과를 다른 방식으로 일반화하지 않는다.
