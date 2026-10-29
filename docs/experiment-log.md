@@ -6,7 +6,9 @@
 
 2026-10-29 첫 확인 때 `gustn99/semantic-versioning-test`는 GitHub API에서 404였다. 접근이 열린 뒤 확인한 결과 기본 브랜치 이름은 `main`이고, 파일·커밋·릴리즈가 없는 빈 저장소였다. 로컬의 `git ls-remote`는 실행 환경의 DNS 제한으로 실패해 GitHub 연결 도구로 확인했다.
 
-GitHub 연결로 `README.md`를 만드는 첫 쓰기 요청은 `403 Resource not accessible by integration`으로 거부됐다. 연결된 GitHub 앱의 이 레포 쓰기 권한이 열리면 원격 구성을 진행한다.
+GitHub 연결로 `README.md`를 만드는 첫 쓰기 요청은 `403 Resource not accessible by integration`으로 거부됐다. 로컬 Git의 네트워크 권한으로 `project/`를 `main`에 push했고, [초기 Action 실행](https://github.com/gustn99/semantic-versioning-test/actions/runs/40813380744)은 성공했다.
+
+[테스트 PR #1](https://github.com/gustn99/semantic-versioning-test/pull/1)의 제목은 `[Feature] 릴리즈 노트 테스트 기능 추가`였고, squash 커밋 제목은 `feat: add release note sample feature (#1)`였다. `main` 병합 SHA는 `663941bfbe50a349222eec57b9e525675e1efee4`다. [기본 모드 Action 실행](https://github.com/gustn99/semantic-versioning-test/actions/runs/40813557005)은 릴리즈 브랜치와 변경 커밋을 만들었지만, `GitHub Actions is not permitted to create or approve pull requests` 오류로 릴리즈 PR 생성에 실패했다. GitHub 저장소의 Actions 설정을 바꾼 뒤 재실행해야 한다.
 
 ## 비교 기준
 
@@ -15,7 +17,7 @@ GitHub 연결로 `README.md`를 만드는 첫 쓰기 요청은 `403 Resource not
 | release-please 설정 | `release-please.default.json` | `release-please.github.json`의 `changelog-type: github` |
 | 예상 본문 형태 | Conventional Commit 종류별 섹션 | `What's Changed` PR 목록과 `Full Changelog` 링크 |
 | 버전 결정 | Conventional Commit | Conventional Commit, 동일 |
-| 실제 Action 실행 | 미실행 | 미실행 |
+| 실제 Action 실행 | PR #1 뒤 실행, 권한 설정 때문에 마지막 단계 실패 | 미실행 |
 | 실제 Release URL | 미생성 | 미생성 |
 
 ## 실제 실행 기록 양식
