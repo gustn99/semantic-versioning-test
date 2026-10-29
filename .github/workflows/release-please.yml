@@ -1,0 +1,59 @@
+name: release-please experiment
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      notes_style:
+        description: Changelog format for this run
+        type: choice
+        required: true
+        default: default
+        options: [default, github]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Select notes format
+        id: mode
+        env:
+          REQUESTED_STYLE: ${{ inputs.notes_style }}
+        run: |
+          style="${REQUESTED_STYLE:-default}"
+          echo "config=release-please.${style}.json" >> "$GITHUB_OUTPUT"
+          echo "style=$style" >> "$GITHUB_OUTPUT"
+
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: ${{ steps.mode.outputs.config }}
+          manifest-file: .release-please-manifest.json
+
+      - name: Record run
+        env:
+          STYLE: ${{ steps.mode.outputs.style }}
+          PRS_CREATED: ${{ steps.release.outputs.prs_created }}
+          RELEASE_CREATED: ${{ steps.release.outputs.release_created }}
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          RELEASE_URL: ${{ steps.release.outputs.html_url }}
+        run: |
+          {
+            echo "## Release Please experiment"
+            echo "- Notes style: \`$STYLE\`"
+            echo "- Release PR created or updated: \`$PRS_CREATED\`"
+            echo "- Release created: \`$RELEASE_CREATED\`"
+            if [ -n "$TAG_NAME" ]; then echo "- Tag: \`$TAG_NAME\`"; fi
+            if [ -n "$RELEASE_URL" ]; then echo "- Release: $RELEASE_URL"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
